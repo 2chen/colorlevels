@@ -71,18 +71,22 @@ protected:
 
 protected:
     QString filename;
-    QLabel* imageArea;
-    QScrollArea* scrollArea;
-    QVBoxLayout* colorsLayout;
     QSet<ColorConstraint*>* colorsSet;
-    QSet<int>* backgroundMask;
 
+    //layout
+    QLabel* imageArea;
+    QVBoxLayout* colorsLayout;
     QWidget* statsWidget; //FIXME
 
-    bool displayOriginal;
+    //dragging
+    QPoint dragStart, scrollStart;
+    QScrollArea* scrollArea;
+
+    //image stuff
+    QSet<int>* backgroundMask;
+    bool displayOriginal, isDragging;
     Magick::Image image;
-    Magick::Blob originalBlob;
-    Magick::Blob blob;
+    Magick::Blob originalBlob, blob;
 
     Magick::Image maskedImage;
 

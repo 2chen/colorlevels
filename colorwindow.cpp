@@ -139,6 +139,7 @@ QSet<int>* ColorConstraint::getPixelMask() {
 
 ColorWindow::ColorWindow()
 {
+    isDragging = false;
     displayOriginal = false;
     colorsSet = new QSet<ColorConstraint*>;
 
@@ -202,7 +203,7 @@ void ColorWindow::loadFile(QString filename) {
       image.read(filename.mid(7).toStdString());
 
       image.write(&originalBlob);
-      backgroundMask = ColorLevels::matchingPixels(&image, Magick::ColorRGB("#FFFFFF"), 1);
+      backgroundMask = ColorLevels::matchingPixels(&image, Magick::ColorRGB("#FFFFFF"), 0.1);
 
       clearConstraints();
     } catch (Magick::Exception &e) {
@@ -228,17 +229,42 @@ void ColorWindow::keyPressEvent(QKeyEvent* event) {
     }
 }
 
-bool ColorWindow::eventFilter(QObject *obj, QEvent *evt) {
-    if(obj == imageArea && evt->type() == QEvent::MouseButtonPress) {
+bool ColorWindow::eventFilter(QObject *, QEvent *evt) {
+    if(evt->type() == QEvent::MouseButtonPress) {
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
 
-        Magick::ColorRGB rgb = ColorLevels::colorAtPixel(&image, mouseEvent->x(), mouseEvent->y());
-        addConstraint(new ColorConstraint(&image, rgb, 10.0, this));
+        if(mouseEvent->button() == Qt::RightButton) {
+            Magick::ColorRGB rgb = ColorLevels::colorAtPixel(&image, mouseEvent->x(), mouseEvent->y());
+            addConstraint(new ColorConstraint(&image, rgb, 10.0, this));
 
-        return true;
-    } else {
-        return false;
+            return true;
+        } else {
+            QApplication::setOverrideCursor(Qt::ClosedHandCursor);
+
+            isDragging = true;
+            dragStart = mouseEvent->pos();
+            scrollStart = QPoint(scrollArea->horizontalScrollBar()->value(),
+                                 scrollArea->verticalScrollBar()->value());
+        }
+    } else if( isDragging && evt->type() == QEvent::MouseButtonRelease ) {
+        QApplication::setOverrideCursor(Qt::CrossCursor);
+
+        isDragging = false;
+    } else if( isDragging && evt->type() == QEvent::MouseMove ) {
+        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
+        QPoint delta = (dragStart - mouseEvent->pos()) / 2.0;
+        QPoint scrollEnd = scrollStart + delta;
+
+        scrollArea->horizontalScrollBar()->setValue(scrollEnd.x());
+        scrollArea->verticalScrollBar()->setValue(scrollEnd.y());
+        scrollArea->update();
+    } else if(evt->type() == QEvent::Wheel ) {
+        QWheelEvent* wheelEvent = static_cast<QWheelEvent*>(evt);
+
+//        std::cout << wheelEvent->delta() << std::endl;
+        //return true; //FIXME
     }
+    return false;
 }
 
 void ColorWindow::addConstraint(ColorConstraint* constraint) {
