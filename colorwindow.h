@@ -68,8 +68,14 @@ protected:
     void displayBlob(Magick::Blob* blob);
     bool eventFilter(QObject *, QEvent *evt);
     void keyPressEvent(QKeyEvent* event);
+    void scaleImage(QPoint point, double factor);
+    void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
 protected:
+#define SCALE_FACTOR_SIZE 3
+    double scaleFactors[SCALE_FACTOR_SIZE] = {1.0, 2.0, 4.0};
+    int scaleIndex = 0;
+
     QString filename;
     QSet<ColorConstraint*>* colorsSet;
 
