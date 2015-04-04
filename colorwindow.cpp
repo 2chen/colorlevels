@@ -147,7 +147,7 @@ ColorWindow::ColorWindow()
     imageArea->setBackgroundRole(QPalette::Base);
     imageArea->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     imageArea->installEventFilter(this);
-    imageArea->setScaledContents(false);
+    imageArea->setScaledContents(true);
 
     scrollArea = new QScrollArea(this);
     scrollArea->setBackgroundRole(QPalette::Dark);
@@ -218,7 +218,7 @@ void ColorWindow::displayBlob(Magick::Blob* blob) {
     pixmap.loadFromData(imageData);
 
     imageArea->setPixmap(pixmap);
-    imageArea->adjustSize();
+    imageArea->resize(scaleFactors[scaleIndex] * imageArea->pixmap()->size());
 }
 
 void ColorWindow::keyPressEvent(QKeyEvent* event) {
@@ -229,12 +229,14 @@ void ColorWindow::keyPressEvent(QKeyEvent* event) {
     }
 }
 
+static int smoothFactor = 0;
 bool ColorWindow::eventFilter(QObject *, QEvent *evt) {
     if(evt->type() == QEvent::MouseButtonPress) {
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
 
         if(mouseEvent->button() == Qt::RightButton) {
-            Magick::ColorRGB rgb = ColorLevels::colorAtPixel(&image, mouseEvent->x(), mouseEvent->y());
+            QPoint scaledPos = mouseEvent->pos() / scaleFactors[scaleIndex];
+            Magick::ColorRGB rgb = ColorLevels::colorAtPixel(&image, scaledPos.x(), scaledPos.y());
             addConstraint(new ColorConstraint(&image, rgb, 10.0, this));
 
             return true;
@@ -251,20 +253,43 @@ bool ColorWindow::eventFilter(QObject *, QEvent *evt) {
 
         isDragging = false;
     } else if( isDragging && evt->type() == QEvent::MouseMove ) {
-        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
-        QPoint delta = (dragStart - mouseEvent->pos()) / 2.0;
-        QPoint scrollEnd = scrollStart + delta;
+        if(smoothFactor++ % 2 == 0) {
+            QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
+            QPoint delta = (dragStart - mouseEvent->pos()) / 1.5;
+            QPoint scrollEnd = scrollStart + delta;
 
-        scrollArea->horizontalScrollBar()->setValue(scrollEnd.x());
-        scrollArea->verticalScrollBar()->setValue(scrollEnd.y());
-        scrollArea->update();
+            scrollArea->horizontalScrollBar()->setValue(scrollEnd.x());
+            scrollArea->verticalScrollBar()->setValue(scrollEnd.y());
+            scrollArea->update();
+        }
     } else if(evt->type() == QEvent::Wheel ) {
         QWheelEvent* wheelEvent = static_cast<QWheelEvent*>(evt);
 
-//        std::cout << wheelEvent->delta() << std::endl;
-        //return true; //FIXME
+        if(wheelEvent->delta() > 0 && scaleIndex < SCALE_FACTOR_SIZE-1)
+            scaleImage(wheelEvent->pos(), scaleFactors[++scaleIndex]);
+        else if(wheelEvent->delta() < 0 && scaleIndex > 0)
+            scaleImage(wheelEvent->pos(), scaleFactors[--scaleIndex]);
+
+        return true;
     }
     return false;
+}
+
+void ColorWindow::scaleImage(QPoint point, double factor)
+{
+    Q_ASSERT(imageArea->pixmap());
+
+    double hp = (double)point.x() / imageArea->width();
+    double vp = (double)point.y() / imageArea->height();
+    imageArea->resize(factor * imageArea->pixmap()->size());
+    scrollArea->horizontalScrollBar()->setValue( (int)(scrollArea->horizontalScrollBar()->maximum()*hp) );
+    scrollArea->verticalScrollBar()->setValue( (int)(scrollArea->verticalScrollBar()->maximum()*vp) );
+}
+
+void ColorWindow::adjustScrollBar(QScrollBar *scrollBar, double factor)
+{
+    scrollBar->setValue(int(factor * scrollBar->value()
+                            + (abs(factor - 1) * scrollBar->pageStep()/2)));
 }
 
 void ColorWindow::addConstraint(ColorConstraint* constraint) {
