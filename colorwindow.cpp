@@ -389,7 +389,7 @@ void ColorWindow::constraintsUpdated() {
     statsLayout->addWidget(new QLabel(QString("Matching percent: %1\%").arg(matchingPercent)));
 
     QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText(QString("%1: %2\%").arg(filename).arg(matchingPercent));
+    clipboard->setText(QString("%1\t%2").arg(filename).arg(matchingPercent));
 }
 
 
