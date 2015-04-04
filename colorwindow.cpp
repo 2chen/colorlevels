@@ -139,6 +139,7 @@ QSet<int>* ColorConstraint::getPixelMask() {
 
 ColorWindow::ColorWindow()
 {
+    scaleFactors[0] = 1.0; scaleFactors[1] = 2.0; scaleFactors[2] = 4.0;
     isDragging = false;
     displayOriginal = false;
     colorsSet = new QSet<ColorConstraint*>;
@@ -199,8 +200,14 @@ void ColorWindow::loadFile(QString filename) {
 
       this->filename = filename.split("/").last();
       //remove file://
+
+      #ifdef _WIN64
+        std::cout << filename.mid(8).toStdString() << std::endl;
+        image.read(filename.mid(8).toStdString());
+      #else
         std::cout << filename.mid(7).toStdString() << std::endl;
-      image.read(filename.mid(7).toStdString());
+        image.read(filename.mid(7).toStdString());
+      #endif
 
       image.write(&originalBlob);
       backgroundMask = ColorLevels::matchingPixels(&image, Magick::ColorRGB("#FFFFFF"), 0.1);
@@ -380,6 +387,9 @@ void ColorWindow::constraintsUpdated() {
     statsLayout->addWidget(new QLabel(QString("Non-background pixels: %1").arg(net)));
     statsLayout->addWidget(new QLabel(QString("Matching pixels: %1").arg(matchingTotal)));
     statsLayout->addWidget(new QLabel(QString("Matching percent: %1\%").arg(matchingPercent)));
+
+    QClipboard *clipboard = QApplication::clipboard();
+    clipboard->setText(QString("%1: %2\%").arg(filename).arg(matchingPercent));
 }
 
 

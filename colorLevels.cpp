@@ -1,7 +1,7 @@
 #include <sys/stat.h>
 
-#include <libgen.h>
-#include <unistd.h>
+//#include <libgen.h>
+//#include <unistd.h>
 
 #include <cstring>
 #include <iostream>
@@ -81,117 +81,6 @@
  * Setup.
  ******************************************************************************/
 
-ColorLevels::Options
-ColorLevels::procargs(
-    int argc,
-    char *argv[])
-{
-	Options options;
-	
-	int opt;
-	while ((opt = getopt(argc, argv, "b:e:f:g:h:m:r:p:t:vw:")) != -1) {
-		switch (opt) {
-		case 'f':
-			options.redCoordinate =
-			    ColorLevels::convertStringToCoordinate(optarg);
-			options.redCoordinateSet = true;
-			break;
-		case 'g':
-			options.purpleCoordinate =
-			    ColorLevels::convertStringToCoordinate(optarg);
-			options.purpleCoordinateSet = true;
-			break;
-		case 'h':
-			options.backgroundCoordinate =
-			    ColorLevels::convertStringToCoordinate(optarg);
-			options.backgroundCoordinateSet = true;
-			break;
-		case 'm':
-			switch (optarg[0]) {
-			case 'o':
-                options.drawMaskOverOriginalImage = true;
-				break;
-			case 't':
-				options.drawMaskOverTransparent = true;
-				break;
-			default:
-				throw std::logic_error("Invalid option for "
-				    "[-m]ask output");
-			}
-			break;
-		case 'r':
-			if (!ColorLevels::checkImageMagickColor(optarg))
-				throw std::logic_error("Invalid color for -r");
-			options.redColor = optarg;
-			break;
-		case 'p':
-			if (!ColorLevels::checkImageMagickColor(optarg))
-				throw std::logic_error("Invalid color for -p");
-			options.purpleColor = optarg;
-			break;
-		case 't':
-			options.redThreshold = std::atof(optarg);
-			break;
-		case 'e':
-			options.purpleThreshold = std::atof(optarg);
-			break;
-		case 'b':
-			options.backgroundThreshold = std::atof(optarg);
-			break;
-		case 'v':
-			options.verbose = true;
-			break;
-		case 'w':
-			if (!ColorLevels::checkImageMagickColor(optarg))
-				throw std::logic_error("Invalid color for -w");
-			options.backgroundColor = optarg;
-			break;
-		default:
-			throw std::logic_error("Invalid argument");
-		}
-	}
-	if (optind >= argc)
-		throw std::logic_error("No image provided");
-	
-	if (options.verbose) {
-		std::cout << "Mask over original image == " <<
-		    (options.drawMaskOverOriginalImage ? "TRUE" : "FALSE") <<
-		    std::endl;
-		std::cout << "Mask over transparent background == " <<
-		    (options.drawMaskOverTransparent ? "TRUE" : "FALSE") <<
-		    std::endl;
-		if (options.redCoordinateSet)
-			std::cout << "Red coordinate == " <<
-			    options.redCoordinate << std::endl;
-		else
-			std::cout << "Red color == " << options.redColor <<
-			    std::endl;
-		std::cout << "Red threshold == " << options.redThreshold <<
-		    std::endl;
-		if (options.purpleCoordinateSet)
-			std::cout << "Purple coordinate == " <<
-			    options.purpleCoordinate << std::endl;
-		else
-			std::cout << "Purple color == " <<
-			    options.purpleColor << std::endl;
-		std::cout << "Purple threshold == " <<
-		    options.purpleThreshold << std::endl;
-		if (options.backgroundCoordinateSet)
-			std::cout << "Background coordinate == " <<
-			    options.backgroundCoordinate << std::endl;
-		else
-			std::cout << "Background color == " <<
-			    (options.backgroundColor == "" ? "auto-detected" : 
-			    options.backgroundColor) << std::endl;
-		std::cout << "Background threshold == " <<
-		    options.backgroundThreshold << std::endl;
-		std::cout << "Verbose == TRUE" << std::endl;
-		std::cout << std::endl;
-	}
-	
-	return (options);
-}
-
 std::string
 ColorLevels::getUsage(
     const std::string &binName)
@@ -253,7 +142,6 @@ ColorLevels::checkImageMagickColor(
 /*******************************************************************************
  * Operations.
  ******************************************************************************/
-
 ColorLevels::Statistics
 ColorLevels::getColorLevels(
     ColorLevels::Options options,
@@ -459,31 +347,15 @@ ColorLevels::getPixels(Magick::Image* image) {
 /*******************************************************************************
  * Conversions.
  ******************************************************************************/
- 
-std::string
-ColorLevels::basenameWithoutExtension(
-    const std::string &path)
-{
-    std::string filename(basename((char*)path.c_str()));
 
-	if (filename.length() == 0)
-		throw std::runtime_error("Error calculating basename");
-	
-	std::string::size_type pos = filename.find_last_of('.');
-	if (pos == std::string::npos)
-		return (filename);
-	
-	return (filename.substr(0, pos));
-}
-
-constexpr double
+const double
 ColorLevels::deg2Rad(
     const double deg)
 {
 	return (deg * (M_PI / 180.0));
 }
 
-constexpr double
+const double
 ColorLevels::rad2Deg(
     const double rad)
 {
