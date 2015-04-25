@@ -160,6 +160,7 @@ ColorWindow::ColorWindow()
 
     // COLOR DOCK WIDGET
     QDockWidget* colorDockWidget = new QDockWidget(tr("Color Constraints"), this);
+    colorDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
     colorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
     QScrollArea* colorScrollArea = new QScrollArea(this);
     colorDockWidget->setWidget(colorScrollArea);
@@ -175,6 +176,7 @@ ColorWindow::ColorWindow()
 
     // STATS DOCK WIDGET
     QDockWidget* statsDockWidget = new QDockWidget(tr("Image Stats"), this);
+    statsDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
     statsDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
 
     statsWidget = new QWidget(this);
