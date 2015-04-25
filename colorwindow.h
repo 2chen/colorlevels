@@ -73,7 +73,7 @@ protected:
 
 protected:
 #define SCALE_FACTOR_SIZE 3
-    double scaleFactors[SCALE_FACTOR_SIZE] = {1.0, 2.0, 4.0};
+    double scaleFactors[SCALE_FACTOR_SIZE]; // = {1.0, 2.0, 4.0};
     int scaleIndex = 0;
 
     QString filename;
