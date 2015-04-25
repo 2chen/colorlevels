@@ -241,7 +241,7 @@ void ColorWindow::loadFile(QString file) {
 }
 
 void ColorWindow::displayBlob(Magick::Blob* blob) {
-    QByteArray imageData((char*)blob->data(), blob->length());
+    QByteArray imageData((char*)blob->data(), (int)blob->length());
 
     QPixmap pixmap;
     pixmap.loadFromData(imageData);
@@ -359,8 +359,8 @@ void ColorWindow::constraintsUpdated() {
     }
 
     maskedImage = Magick::Image(image);
-    int width = maskedImage.size().width();
-    int height = maskedImage.size().height();
+    int width = (int)maskedImage.size().width();
+    int height = (int)maskedImage.size().height();
     Magick::PixelPacket* pixels = maskedImage.getPixels(0, 0, width, height);
 
     QSet<int>::Iterator pixelIt;
@@ -395,7 +395,7 @@ void ColorWindow::constraintsUpdated() {
     statsTotalLabel->setText(QString("Pixels: %1").arg(total));
     statsNonBackgroundLabel->setText(QString("Non-background pixels: %1").arg(net));
     statsMatchingLabel->setText(QString("Matching pixels: %1").arg(matchingTotal));
-    statsPercentLabel->setText(QString("Matching percent: %1\%").arg(matchingPercent));
+    statsPercentLabel->setText(QString("Matching percent: %1%").arg(matchingPercent));
     exportButton->setEnabled(true);
 
     QClipboard *clipboard = QApplication::clipboard();
