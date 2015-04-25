@@ -237,7 +237,7 @@ namespace ColorLevels
     	 * @return
     	 * deg in radians.
     	 */
-	constexpr double
+    const double
 	deg2Rad(
 	    const double deg);
 	
@@ -251,7 +251,7 @@ namespace ColorLevels
     	 * @return
     	 * rad in degrees.
     	 */
-        constexpr double
+    const double
 	rad2Deg(
 	    const double rad);
 	
