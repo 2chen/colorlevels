@@ -1,6 +1,17 @@
 #ifndef __GPF_COLOR_LEVELS_H__
 #define __GPF_COLOR_LEVELS_H__
 
+#ifdef _MSC_VER
+
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+
+#else
+#include <stdint.h>
+#endif
+
 #include <Magick++.h>
 #include <QSet>
 
@@ -237,8 +248,8 @@ namespace ColorLevels
     	 * @return
     	 * deg in radians.
     	 */
-	constexpr double
-	deg2Rad(
+    const double
+    deg2Rad(
 	    const double deg);
 	
 	/**
@@ -251,8 +262,8 @@ namespace ColorLevels
     	 * @return
     	 * rad in degrees.
     	 */
-        constexpr double
-	rad2Deg(
+    const double
+    rad2Deg(
 	    const double rad);
 	
 	/**
