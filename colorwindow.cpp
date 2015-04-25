@@ -139,7 +139,9 @@ QSet<int>* ColorConstraint::getPixelMask() {
 
 ColorWindow::ColorWindow()
 {
-    scaleFactors[0] = 1.0; scaleFactors[1] = 2.0; scaleFactors[2] = 4.0;
+    //windows BS
+    scaleFactors[0] = 0.75; scaleFactors[1] = 1.0; scaleFactors[2] = 2.0; scaleFactors[3] = 4.0;
+
     isDragging = false;
     displayOriginal = false;
     colorsSet = new QSet<ColorConstraint*>;
@@ -399,9 +401,7 @@ void ColorWindow::constraintsUpdated() {
 }
 
 void ColorWindow::exportImage() {
-    exportButton->setEnabled(false);
-
     QString exportFn = QString("%1%2_masked.png").arg(filepath, filename.mid(0, filename.lastIndexOf('.')));
-
     maskedImage.write(exportFn.toStdString());
+    exportButton->setEnabled(false);
 }

@@ -51,7 +51,7 @@ protected:
 class ColorWindow : public QMainWindow {
     Q_OBJECT
 
-#define WINDOW_TITLE "Color Level Analyzer"
+#define WINDOW_TITLE "Science Wand v0.9"
 public:
     ColorWindow();
 
@@ -74,8 +74,8 @@ protected:
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
 protected:
-#define SCALE_FACTOR_SIZE 3
-    double scaleFactors[SCALE_FACTOR_SIZE] = {1.0, 2.0, 4.0};
+#define SCALE_FACTOR_SIZE 4
+    double scaleFactors[SCALE_FACTOR_SIZE] = {0.5, 1.0, 2.0, 4.0};
     int scaleIndex = 0;
 
     QString filepath, filename;
