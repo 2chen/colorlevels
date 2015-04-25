@@ -24,14 +24,11 @@ QT_CONFIG -= no-pkg-config
 
 CONFIG += c++11
 
+unix: ICON = colorlevels.icns
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += ImageMagick++
 
-#QMAKE_CXXFLAGS -= -stdlib=libc++
-#QMAKE_CXXFLAGS += -stdlib=libstdc++
-#QMAKE_LFLAGS -= -stdlib=libc++
-#QMAKE_LFLAGS += -stdlib=libstdc++
-
+win32: RC_FILE = colorlevels.rc
 win32: LIBS += -LC:/Users/yxing/Documents/workspace/ImageMagick-6.9.0-Q16/lib/ -lCORE_RL_Magick++_
 win32: INCLUDEPATH += C:/Users/yxing/Documents/workspace/ImageMagick-6.9.0-Q16/include
 win32: DEPENDPATH += C:/Users/yxing/Documents/workspace/ImageMagick-6.9.0-Q16/include
