@@ -1,0 +1,33 @@
+TODO 3/19
+
+BILLED - 20
+
+meeting time - 6
+
+colorlevels - 16 as of 3/24
+3/25: 2.5
+3/26: 1.5
+3/27: 1.5
+4/3:  3.5
+
+4/25: 2.5
+
+
+
+
+add decimal thresholds
+zoom
+compile for windows
+--------------------------------
+export masked image to photoshop
+
+save image + colors
+undo?
+
+
+
+
+================================
+fake data
+modify search
+add feeds

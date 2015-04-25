@@ -51,6 +51,7 @@ protected:
 class ColorWindow : public QMainWindow {
     Q_OBJECT
 
+#define WINDOW_TITLE "Science Wand v0.9"
 public:
     ColorWindow();
 
@@ -63,6 +64,7 @@ public slots:
     void constraintsUpdated();
     void removeConstraint(ColorConstraint* c);
     void clearConstraints();
+    void exportImage();
 
 protected:
     void displayBlob(Magick::Blob* blob);
@@ -72,17 +74,25 @@ protected:
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
 protected:
-#define SCALE_FACTOR_SIZE 3
-    double scaleFactors[SCALE_FACTOR_SIZE]; // = {1.0, 2.0, 4.0};
+#define SCALE_FACTOR_SIZE 4
+    double scaleFactors[SCALE_FACTOR_SIZE]; // = {0.75, 1.0, 2.0, 4.0};
     int scaleIndex = 0;
 
-    QString filename;
+    QString filepath, filename;
     QSet<ColorConstraint*>* colorsSet;
 
     //layout
     QLabel* imageArea;
     QVBoxLayout* colorsLayout;
     QWidget* statsWidget; //FIXME
+
+    //stats widget layout
+    QLabel* statsFileLabel;
+    QLabel* statsTotalLabel;
+    QLabel* statsNonBackgroundLabel;
+    QLabel* statsMatchingLabel;
+    QLabel* statsPercentLabel;
+    QPushButton* exportButton;
 
     //dragging
     QPoint dragStart, scrollStart;
@@ -95,7 +105,6 @@ protected:
     Magick::Blob originalBlob, blob;
 
     Magick::Image maskedImage;
-
 };
 
 #endif // COLORWINDOW

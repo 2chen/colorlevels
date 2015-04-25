@@ -139,7 +139,9 @@ QSet<int>* ColorConstraint::getPixelMask() {
 
 ColorWindow::ColorWindow()
 {
-    scaleFactors[0] = 1.0; scaleFactors[1] = 2.0; scaleFactors[2] = 4.0;
+    //windows BS
+    scaleFactors[0] = 0.75; scaleFactors[1] = 1.0; scaleFactors[2] = 2.0; scaleFactors[3] = 4.0;
+
     isDragging = false;
     displayOriginal = false;
     colorsSet = new QSet<ColorConstraint*>;
@@ -158,6 +160,7 @@ ColorWindow::ColorWindow()
 
     // COLOR DOCK WIDGET
     QDockWidget* colorDockWidget = new QDockWidget(tr("Color Constraints"), this);
+    colorDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
     colorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
     QScrollArea* colorScrollArea = new QScrollArea(this);
     colorDockWidget->setWidget(colorScrollArea);
@@ -173,15 +176,31 @@ ColorWindow::ColorWindow()
 
     // STATS DOCK WIDGET
     QDockWidget* statsDockWidget = new QDockWidget(tr("Image Stats"), this);
+    statsDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
     statsDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
 
     statsWidget = new QWidget(this);
     statsDockWidget->setWidget(statsWidget);
+    QVBoxLayout* statsLayout = new QVBoxLayout(statsWidget);
+    statsWidget->setLayout(statsLayout);
+
+    exportButton = new QPushButton("Export Image");
+    exportButton->setEnabled(false);
+    connect(exportButton, SIGNAL(clicked()), this, SLOT(exportImage()));
+
+    statsLayout->addWidget(statsFileLabel = new QLabel(QString("Image: N/A")));
+    statsLayout->addWidget(statsTotalLabel = new QLabel(QString("Pixels: N/A")));
+    statsLayout->addWidget(statsNonBackgroundLabel = new QLabel(QString("Non-background pixels: N/A")));
+    statsLayout->addWidget(statsMatchingLabel = new QLabel(QString("Matching pixels: N/A")));
+    statsLayout->addWidget(statsPercentLabel = new QLabel(QString("Matching percent: N/A")));
+    statsLayout->addWidget(exportButton);
+    statsWidget->setMaximumHeight(200);
 
     this->addDockWidget(Qt::RightDockWidgetArea, colorDockWidget);
     this->addDockWidget(Qt::RightDockWidgetArea, statsDockWidget);
 
     this->setAcceptDrops(true);
+    setWindowTitle(tr(WINDOW_TITLE));
     resize(QGuiApplication::primaryScreen()->availableSize());
 }
 
@@ -194,25 +213,28 @@ void ColorWindow::dragEnterEvent(QDragEnterEvent *event)
 void ColorWindow::dropEvent(QDropEvent* e) {
     loadFile(e->mimeData()->text());
 }
-void ColorWindow::loadFile(QString filename) {
+void ColorWindow::loadFile(QString file) {
     //load blobs w/ imagemagick
     try {
+      filename = file.split("/").last();
 
-      this->filename = filename.split("/").last();
-      //remove file://
-
+      int trim;
       #ifdef _WIN64
-        std::cout << filename.mid(8).toStdString() << std::endl;
-        image.read(filename.mid(8).toStdString());
+        trim = 8;
       #else
-        std::cout << filename.mid(7).toStdString() << std::endl;
-        image.read(filename.mid(7).toStdString());
+        trim = 7;
       #endif
+
+      image.read(file.mid(trim).toStdString());
+      filepath = file.mid(trim);
+      filepath.chop(filename.length());
 
       image.write(&originalBlob);
       backgroundMask = ColorLevels::matchingPixels(&image, Magick::ColorRGB("#FFFFFF"), 0.1);
 
       clearConstraints();
+
+      setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1").arg(filename));
     } catch (Magick::Exception &e) {
       throw std::runtime_error(e.what());
     }
@@ -363,33 +385,25 @@ void ColorWindow::constraintsUpdated() {
     maskedImage.write(&blob);
     if(displayOriginal) { displayBlob(&originalBlob); } else { displayBlob(&blob); }
 
-    //FIXME
-    if(statsWidget->layout() != NULL) {
-        QLayoutItem* item;
-        while ( ( item = statsWidget->layout()->takeAt( 0 ) ) != NULL )
-        {
-            delete item->widget();
-            delete item;
-        }
-        delete statsWidget->layout();
-    }
-
     int total = width*height;
     int background = backgroundMask->size();
     int net = total-background;
     int matchingTotal = mask.size();
     double matchingPercent = 100.0*matchingTotal / net;
 
-    QVBoxLayout* statsLayout = new QVBoxLayout(statsWidget);
-    statsWidget->setLayout(statsLayout);
-    statsLayout->addWidget(new QLabel(QString("Image: %1").arg(filename)));
-    statsLayout->addWidget(new QLabel(QString("Pixels: %1").arg(total)));
-    statsLayout->addWidget(new QLabel(QString("Non-background pixels: %1").arg(net)));
-    statsLayout->addWidget(new QLabel(QString("Matching pixels: %1").arg(matchingTotal)));
-    statsLayout->addWidget(new QLabel(QString("Matching percent: %1\%").arg(matchingPercent)));
+    statsFileLabel->setText(QString("Image: %1").arg(filename));
+    statsTotalLabel->setText(QString("Pixels: %1").arg(total));
+    statsNonBackgroundLabel->setText(QString("Non-background pixels: %1").arg(net));
+    statsMatchingLabel->setText(QString("Matching pixels: %1").arg(matchingTotal));
+    statsPercentLabel->setText(QString("Matching percent: %1\%").arg(matchingPercent));
+    exportButton->setEnabled(true);
 
     QClipboard *clipboard = QApplication::clipboard();
-    clipboard->setText(QString("%1\t%2").arg(filename).arg(matchingPercent));
+    clipboard->setText(QString("%1\t%2").arg(filename).arg(matchingPercent/100.0));
 }
 
-
+void ColorWindow::exportImage() {
+    QString exportFn = QString("%1%2_masked.png").arg(filepath, filename.mid(0, filename.lastIndexOf('.')));
+    maskedImage.write(exportFn.toStdString());
+    exportButton->setEnabled(false);
+}
