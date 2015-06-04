@@ -6,6 +6,8 @@
 
 int main(int argc, char *argv[])
 {
+    Magick::InitializeMagick(*argv);
+
     QApplication app(argc, argv);
     QGuiApplication::setApplicationDisplayName(ColorWindow::tr("Image Viewer"));
     ColorWindow colorWindow;
@@ -225,7 +227,8 @@ void ColorWindow::loadFile(QString file) {
         trim = 7;
       #endif
 
-      image.read(file.mid(trim).toStdString());
+      image = Magick::Image(file.mid(trim).toStdString());
+
       filepath = file.mid(trim);
       filepath.chop(filename.length());
 
