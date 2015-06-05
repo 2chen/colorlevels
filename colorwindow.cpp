@@ -158,7 +158,25 @@ ColorWindow::ColorWindow()
     scrollArea->setBackgroundRole(QPalette::Dark);
     scrollArea->setWidget(imageArea);
 
+    connect(scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateOverview()));
+    connect(scrollArea->verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateOverview()));
+
     setCentralWidget(scrollArea);
+
+    // OVERVIEW DOCK WIDGET
+    QDockWidget* overviewDockWidget = new QDockWidget(tr("Overview"), this);
+    overviewDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    overviewDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
+    overviewWidget = new OverviewWidget(this);
+    overviewWidget->setBackgroundRole(QPalette::Base);
+    overviewWidget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+//    overviewWidget->installEventFilter(this); //TODO: jump to area
+    overviewWidget->setScaledContents(true);
+    overviewDockWidget->setWidget(overviewWidget);
+    overviewDockWidget->setMinimumHeight(300);
+    overviewDockWidget->setMaximumHeight(300);
+    overviewDockWidget->setMinimumWidth(300);
+    overviewDockWidget->setMaximumWidth(300);
 
     // COLOR DOCK WIDGET
     QDockWidget* colorDockWidget = new QDockWidget(tr("Color Constraints"), this);
@@ -166,7 +184,7 @@ ColorWindow::ColorWindow()
     colorDockWidget->setAllowedAreas(Qt::RightDockWidgetArea);
     QScrollArea* colorScrollArea = new QScrollArea(this);
     colorDockWidget->setWidget(colorScrollArea);
-    colorDockWidget->setMinimumWidth(400);
+    colorDockWidget->setMinimumWidth(300);
 
     QWidget* colorWidget = new QWidget(colorScrollArea);
     colorScrollArea->setWidget(colorWidget);
@@ -196,8 +214,9 @@ ColorWindow::ColorWindow()
     statsLayout->addWidget(statsMatchingLabel = new QLabel(QString("Matching pixels: N/A")));
     statsLayout->addWidget(statsPercentLabel = new QLabel(QString("Matching percent: N/A")));
     statsLayout->addWidget(exportButton);
-    statsWidget->setMaximumHeight(200);
+    statsWidget->setMaximumHeight(150);
 
+    this->addDockWidget(Qt::RightDockWidgetArea, overviewDockWidget);
     this->addDockWidget(Qt::RightDockWidgetArea, colorDockWidget);
     this->addDockWidget(Qt::RightDockWidgetArea, statsDockWidget);
 
@@ -236,11 +255,41 @@ void ColorWindow::loadFile(QString file) {
       backgroundMask = ColorLevels::matchingPixels(&image, Magick::ColorRGB("#FFFFFF"), 0.1);
 
       clearConstraints();
+      initOverview();
+      updateOverview();
 
       setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1").arg(filename));
     } catch (Magick::Exception &e) {
       throw std::runtime_error(e.what());
     }
+}
+
+OverviewWidget::OverviewWidget(QWidget *parent) : QLabel(parent) {
+    band = new QRubberBand(QRubberBand::Shape::Rectangle, this);
+    band->setGeometry(0,0,0,0);
+    band->show();
+}
+
+void OverviewWidget::drawBoundingBox(double x, double y, double w, double h) {
+    band->setGeometry(QRect(width()*x, height()*y, width()*w, height()*h));
+}
+
+void ColorWindow::initOverview() {
+    QByteArray imageData((char*)originalBlob.data(), (int)originalBlob.length());
+
+    QPixmap pixmap;
+    pixmap.loadFromData(imageData);
+
+    overviewWidget->setPixmap(pixmap);
+}
+
+void ColorWindow::updateOverview() {
+    double x = (double)scrollArea->horizontalScrollBar()->value() / imageArea->width();
+    double y = (double)scrollArea->verticalScrollBar()->value() / imageArea->height();
+    double w = (double)scrollArea->width()/imageArea->width();
+    double h = (double)scrollArea->height()/imageArea->height();
+
+    overviewWidget->drawBoundingBox(x,y,w,h);
 }
 
 void ColorWindow::displayBlob(Magick::Blob* blob) {

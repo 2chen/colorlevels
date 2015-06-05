@@ -48,6 +48,18 @@ protected:
 
 };
 
+class OverviewWidget : public QLabel {
+    Q_OBJECT
+
+public:
+    OverviewWidget(QWidget* parent);
+    void drawBoundingBox(double x1, double y1, double x2, double y2);
+
+protected:
+    QRubberBand* band;
+
+};
+
 class ColorWindow : public QMainWindow {
     Q_OBJECT
 
@@ -65,9 +77,11 @@ public slots:
     void removeConstraint(ColorConstraint* c);
     void clearConstraints();
     void exportImage();
+    void updateOverview();
 
 protected:
     void displayBlob(Magick::Blob* blob);
+    void initOverview();
     bool eventFilter(QObject *, QEvent *evt);
     void keyPressEvent(QKeyEvent* event);
     void scaleImage(QPoint point, double factor);
@@ -84,7 +98,8 @@ protected:
     //layout
     QLabel* imageArea;
     QVBoxLayout* colorsLayout;
-    QWidget* statsWidget; //FIXME
+    OverviewWidget* overviewWidget;
+    QWidget* statsWidget;
 
     //stats widget layout
     QLabel* statsFileLabel;
