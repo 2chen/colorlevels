@@ -9,9 +9,9 @@ int main(int argc, char *argv[])
     Magick::InitializeMagick(*argv);
 
     QApplication app(argc, argv);
-    QGuiApplication::setApplicationDisplayName(ColorWindow::tr("Image Viewer"));
+    QGuiApplication::setApplicationDisplayName(ColorWindow::tr("Science Wand"));
     ColorWindow colorWindow;
-    colorWindow.show();
+    colorWindow.showMaximized();
 
     return app.exec();
 }
@@ -170,7 +170,7 @@ ColorWindow::ColorWindow()
     overviewWidget = new OverviewWidget(this);
     overviewWidget->setBackgroundRole(QPalette::Base);
     overviewWidget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-//    overviewWidget->installEventFilter(this); //TODO: jump to area
+    overviewWidget->installEventFilter(this);
     overviewWidget->setScaledContents(true);
     overviewDockWidget->setWidget(overviewWidget);
     overviewDockWidget->setMinimumHeight(300);
@@ -270,6 +270,11 @@ OverviewWidget::OverviewWidget(QWidget *parent) : QLabel(parent) {
     band->show();
 }
 
+std::tuple<double,double,double,double> OverviewWidget::getBoundingBox() {
+    QRect rect = band->geometry();
+    return std::make_tuple(rect.x()/(double)width(), rect.y()/(double)height(), rect.width()/(double)width(), rect.height()/(double)height());
+}
+
 void OverviewWidget::drawBoundingBox(double x, double y, double w, double h) {
     band->setGeometry(QRect(width()*x, height()*y, width()*w, height()*h));
 }
@@ -311,8 +316,17 @@ void ColorWindow::keyPressEvent(QKeyEvent* event) {
 }
 
 static int smoothFactor = 0;
-bool ColorWindow::eventFilter(QObject *, QEvent *evt) {
-    if(evt->type() == QEvent::MouseButtonPress) {
+bool ColorWindow::eventFilter(QObject *o, QEvent *evt) {
+    if( o == overviewWidget && evt->type() == QEvent::MouseButtonPress ) {
+        std::tuple<double,double,double,double> tuple = overviewWidget->getBoundingBox();
+        QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
+        double x = mouseEvent->x()/(double)overviewWidget->width(), y = mouseEvent->y()/(double)overviewWidget->width(), w = std::get<2>(tuple), h = std::get<3>(tuple);
+        qDebug() << x << "," << y << " " << w << "x" << h;
+
+        scrollArea->horizontalScrollBar()->setValue((x-w/2)*imageArea->width());
+        scrollArea->verticalScrollBar()->setValue((y-h/2)*imageArea->height());
+        scrollArea->update();
+    } else if(evt->type() == QEvent::MouseButtonPress) {
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
 
         if(mouseEvent->button() == Qt::RightButton) {

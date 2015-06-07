@@ -54,6 +54,7 @@ class OverviewWidget : public QLabel {
 public:
     OverviewWidget(QWidget* parent);
     void drawBoundingBox(double x1, double y1, double x2, double y2);
+    std::tuple<double,double,double,double> getBoundingBox();
 
 protected:
     QRubberBand* band;
@@ -63,7 +64,7 @@ protected:
 class ColorWindow : public QMainWindow {
     Q_OBJECT
 
-#define WINDOW_TITLE "Science Wand v0.9"
+#define WINDOW_TITLE "Science Wand v0.9.1"
 public:
     ColorWindow();
 
