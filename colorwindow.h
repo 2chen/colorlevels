@@ -81,6 +81,9 @@ public slots:
     void updateOverview();
 
 protected:
+    double getScaleFactor();
+    bool incrementScaleFactor(int direction);
+
     void displayBlob(Magick::Blob* blob);
     void initOverview();
     bool eventFilter(QObject *, QEvent *evt);
