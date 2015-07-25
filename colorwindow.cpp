@@ -258,7 +258,7 @@ void ColorWindow::loadFile(QString file) {
       initOverview();
       updateOverview();
 
-      setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1").arg(filename));
+      setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1 (%2% zoom)").arg(filename).arg(getScaleFactor()*100));
     } catch (Magick::Exception &e) {
       throw std::runtime_error(e.what());
     }
@@ -304,7 +304,7 @@ void ColorWindow::displayBlob(Magick::Blob* blob) {
     pixmap.loadFromData(imageData);
 
     imageArea->setPixmap(pixmap);
-    imageArea->resize(scaleFactors[scaleIndex] * imageArea->pixmap()->size());
+    imageArea->resize(getScaleFactor() * imageArea->pixmap()->size());
 }
 
 void ColorWindow::keyPressEvent(QKeyEvent* event) {
@@ -330,7 +330,7 @@ bool ColorWindow::eventFilter(QObject *o, QEvent *evt) {
         QMouseEvent* mouseEvent = static_cast<QMouseEvent*>(evt);
 
         if(mouseEvent->button() == Qt::RightButton) {
-            QPoint scaledPos = mouseEvent->pos() / scaleFactors[scaleIndex];
+            QPoint scaledPos = mouseEvent->pos() / getScaleFactor();
             Magick::ColorRGB rgb = ColorLevels::colorAtPixel(&image, scaledPos.x(), scaledPos.y());
             addConstraint(new ColorConstraint(&image, rgb, 10.0, this));
 
@@ -360,14 +360,42 @@ bool ColorWindow::eventFilter(QObject *o, QEvent *evt) {
     } else if(evt->type() == QEvent::Wheel ) {
         QWheelEvent* wheelEvent = static_cast<QWheelEvent*>(evt);
 
-        if(wheelEvent->delta() > 0 && scaleIndex < SCALE_FACTOR_SIZE-1)
-            scaleImage(wheelEvent->pos(), scaleFactors[++scaleIndex]);
-        else if(wheelEvent->delta() < 0 && scaleIndex > 0)
-            scaleImage(wheelEvent->pos(), scaleFactors[--scaleIndex]);
+        if(wheelEvent->delta() > 0 && incrementScaleFactor(1))
+            scaleImage(wheelEvent->pos(), getScaleFactor());
+        else if(wheelEvent->delta() < 0 && incrementScaleFactor(-1))
+            scaleImage(wheelEvent->pos(), getScaleFactor());
 
         return true;
     }
     return false;
+}
+
+double ColorWindow::getScaleFactor() {
+    std::cout << "SCALE FACTOR: " << scaleIndex << std::endl;
+    return pow(2.0, scaleIndex);
+}
+
+bool ColorWindow::incrementScaleFactor(int direction) {
+    if(direction == 1) {
+        int scaleMax = 2;
+        if(scaleIndex >= scaleMax)
+            return false;
+
+        scaleIndex++;
+        setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1 (%2% zoom)").arg(filename).arg(getScaleFactor()*100));
+        return true;
+    } else {
+        double wRatio = (double)scrollArea->width() / image.size().width();
+        double hRatio = (double)scrollArea->height() / image.size().height();
+        int scaleMin = floor( log2(std::min(wRatio, hRatio)) );
+
+        if(scaleIndex <= scaleMin)
+            return false;
+
+        scaleIndex--;
+        setWindowTitle(QString(tr(WINDOW_TITLE) + " - %1 (%2% zoom)").arg(filename).arg(getScaleFactor()*100));
+        return true;
+    }
 }
 
 void ColorWindow::scaleImage(QPoint point, double factor)
